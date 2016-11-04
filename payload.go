@@ -1,4 +1,4 @@
-package model
+package main
 
 // Payload holds the metrics we receive in a request.
 type Payload struct {
