@@ -2,8 +2,8 @@ package main
 
 import "net/http"
 
-// Route type holds information about HTTP Route
-type Route struct {
+// route type holds information about HTTP Route
+type route struct {
 	Name       string
 	Method     string
 	Pattern    string
@@ -11,8 +11,8 @@ type Route struct {
 }
 
 // Routes is a collection of Route type
-type Routes []Route
+type routes []route
 
-var routes = Routes{
-	Route{"UserCreate", "POST", "/user/create", UserCreate},
+var appRoutes = routes{
+	route{"UserCreate", "POST", "/user/create", userCreate},
 }

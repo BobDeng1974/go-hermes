@@ -13,8 +13,8 @@ type APIResponse struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// Response builds and writes the API response
-func (r APIResponse) Response(w http.ResponseWriter) {
+// response() builds and writes the API response.
+func (r APIResponse) response(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	// json encode APIResponse in response writer
