@@ -11,7 +11,7 @@ var db *sql.DB
 
 func main() {
 	var err error
-	db, err = initDb(os.Getenv("MYSQL_USERNAME"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_NAME"))
+	db, err = initDB(os.Getenv("MYSQL_USERNAME"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_NAME"))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

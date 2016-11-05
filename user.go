@@ -63,7 +63,7 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
-		APIResponse{Error: "Something went wrong"}.response(w)
+		APIResponse{Error: "Could not check if user exists"}.response(w)
 		return
 	}
 
@@ -73,7 +73,14 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.encryptPassword() // encrypt password
-	user.insert()          // save user to db
+	// save user to db
+	err = user.insert()
+	if err != nil {
+		log.Println(err)
+		w.Header().Set(`Status`, string(http.StatusInternalServerError))
+		APIResponse{Error: "Could not insert user"}.response(w)
+		return
+	}
 
 	// user created!
 	w.WriteHeader(http.StatusCreated)
@@ -117,20 +124,22 @@ func (u *User) encryptPassword() {
 }
 
 // insert() saves newly created user in database
-func (u *User) insert() {
+func (u *User) insert() error {
 	stmt, err := db.Prepare("INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	res, err := stmt.Exec(u.Username, u.Password, u.Salt, u.Email, time.Now())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	userID, err := res.LastInsertId()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	u.ID = int(userID)
+
+	return nil
 }

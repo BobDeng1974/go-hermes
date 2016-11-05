@@ -14,11 +14,11 @@ type APIResponse struct {
 }
 
 // response() builds and writes the API response.
-func (r APIResponse) response(w http.ResponseWriter) {
+func (ar APIResponse) response(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	// json encode APIResponse in response writer
-	if err := json.NewEncoder(w).Encode(r); err != nil {
+	if err := json.NewEncoder(w).Encode(ar); err != nil {
 		log.Fatalln(err)
 	}
 }
