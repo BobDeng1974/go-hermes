@@ -18,6 +18,7 @@ import (
 const (
 	insertUserQuery       = "INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)"
 	findUserByNameOrEmail = "SELECT id FROM user WHERE username = ? OR email = ?"
+	findUserByID          = "SELECT id FROM user WHERE id = ? LIMIT 1"
 )
 
 type userHandler struct {
@@ -149,4 +150,21 @@ func (uh *userHandler) insert(u *User) error {
 	u.ID = int(userID)
 
 	return nil
+}
+
+// Checks if user exists by given id. Returns true if user exists, or false if not.
+// Also returns error or nil if no error occurred.
+func (uh *userHandler) findByID(id int) (bool, error) {
+	err := uh.db.QueryRow(findUserByID, id).Scan(&id)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			// something went wrong with this query
+			return false, err
+		}
+		// user doesn't exist
+		return false, nil
+	}
+
+	// user already exists
+	return true, nil
 }

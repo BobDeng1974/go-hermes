@@ -9,13 +9,13 @@ type OS struct {
 
 // Server represents a remote host
 type Server struct {
-	ID             int
-	HostName       string
-	User           *User
-	LastMetricDate time.Time
-	OS             *OS
-	Metrics        *[]Metric
-	CreationDate   time.Time
+	ID             int       `json:"id"`
+	HostName       string    `json:"hostname"`
+	User           *User     `json:"user"`
+	LastMetricDate time.Time `json:"lastMetricDate,omitempty"`
+	OS             *OS       `json:"os"`
+	Metrics        *[]Metric `json:"-"`
+	CreationDate   time.Time `json:"creationDate,omitempty"`
 }
 
 // A Metric is a measurement that makes sense to User when viewed in dashboard.
