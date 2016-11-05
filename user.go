@@ -78,6 +78,7 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 
 	user.encryptPassword() // encrypt password
 	// save user to db
+	user.CreationDate = time.Now()
 	err = user.insert()
 	if err != nil {
 		log.Println(err)
@@ -124,7 +125,7 @@ func (u *User) encryptPassword() {
 	}
 
 	u.Password = fmt.Sprintf("%x", dk)
-	u.Salt = fmt.Sprintf("%s", salt)
+	u.Salt = fmt.Sprintf("%x", salt)
 }
 
 // insert() saves newly created user in database
@@ -133,7 +134,7 @@ func (u *User) insert() error {
 	if err != nil {
 		return err
 	}
-	res, err := stmt.Exec(u.Username, u.Password, u.Salt, u.Email, time.Now())
+	res, err := stmt.Exec(u.Username, u.Password, u.Salt, u.Email, u.CreationDate)
 	if err != nil {
 		return err
 	}
