@@ -9,9 +9,25 @@ import (
 
 var db *sql.DB
 
+// environment variables needed for mysql connection
+const (
+	mysqlUsername = "MYSQL_USERNAME"
+	mysqlPassword = "MYSQL_PASSWORD"
+	mysqlDBName   = "MYSQL_NAME"
+)
+
 func main() {
 	var err error
-	db, err = initDB(os.Getenv("MYSQL_USERNAME"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_NAME"))
+
+	// Show a clear message if an environment variable is not set.
+	// DB connection will fail without this check, but this check will speed up
+	// the debugging process knowing if an environment variable is not set or
+	// if the credentials are just wrong.
+	if os.Getenv(mysqlUsername) == "" || os.Getenv(mysqlPassword) == "" || os.Getenv(mysqlDBName) == "" {
+		log.Fatalln("MySQL database environment variables need to be set")
+	}
+
+	db, err = initDB(os.Getenv(mysqlUsername), os.Getenv(mysqlPassword), os.Getenv(mysqlDBName))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
