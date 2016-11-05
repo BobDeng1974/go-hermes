@@ -31,38 +31,44 @@ type User struct {
 // saves user to db, and returns a JSON response.
 func userCreate(w http.ResponseWriter, r *http.Request) {
 	var user User
+	var err error
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 100000))
 	if err != nil {
 		// could not read stream
 		log.Fatalln(err)
 	}
 
-	if err := r.Body.Close(); err != nil {
+	if err = r.Body.Close(); err != nil {
 		// could not close body
 		log.Fatalln(err)
 	}
 
 	// could not create user type from provided json
-	if err := json.Unmarshal(body, &user); err != nil {
+	if err = json.Unmarshal(body, &user); err != nil {
 		w.WriteHeader(422) // unprocessable entity
 		APIResponse{Error: "Unprocessable entity"}.response(w)
 
 		log.Fatalln(err)
-
 		return
 	}
 
 	// email validation
-	if _, err := mail.ParseAddress(user.Email); err != nil {
+	if _, err = mail.ParseAddress(user.Email); err != nil {
 		APIResponse{Error: "Invalid email address"}.response(w)
-
 		return
 	}
 
 	// check if there's a user with that username/email already
-	if user.getUser() {
-		APIResponse{Error: "User already exists"}.response(w)
+	exist, err := user.getUser()
+	if err != nil {
+		log.Println(err)
+		w.Header().Set(`Status`, string(http.StatusInternalServerError))
+		APIResponse{Error: "Something went wrong"}.response(w)
+		return
+	}
 
+	if exist {
+		APIResponse{Error: "User already exists"}.response(w)
 		return
 	}
 
@@ -76,21 +82,21 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // getUser() queries database to find out if user already exists based on username and email.
-func (u *User) getUser() bool {
+func (u *User) getUser() (bool, error) {
 	var id int
 
 	// Prepare statement for reading data
 	err := db.QueryRow("SELECT id FROM user WHERE username = ? OR email = ?", u.Username, u.Email).Scan(&id)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Fatalln(err)
+			return false, err
 		}
 		// user doesn't exist
-		return false
+		return false, nil
 	}
 
 	// user already exists
-	return true
+	return true, nil
 }
 
 // encryptPassword() uses scrypt library to encrypt user's password. Salt is generated from rand.Reader.
