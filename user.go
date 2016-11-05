@@ -15,6 +15,11 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+const (
+	insertUserQuery       = "INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)"
+	findUserByNameOrEmail = "SELECT id FROM user WHERE username = ? OR email = ?"
+)
+
 type userHandler struct {
 	db *sql.DB
 }
@@ -26,7 +31,6 @@ const ucrLength = 100000
 // userCreate() reads request, validates email, checks if user exists,
 // saves user to db, and returns a JSON response.
 func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
-	var user *User
 	var err error
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, ucrLength))
 	if err != nil {
@@ -39,6 +43,7 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 
+	user := &User{}
 	// could not create user type from provided json
 	if err = json.Unmarshal(body, user); err != nil {
 		w.WriteHeader(422) // unprocessable entity
@@ -90,7 +95,7 @@ func (uh *userHandler) userExists(u *User) (bool, error) {
 	var id int
 
 	// Prepare statement for reading data
-	err := uh.db.QueryRow("SELECT id FROM user WHERE username = ? OR email = ?", u.Username, u.Email).Scan(&id)
+	err := uh.db.QueryRow(findUserByNameOrEmail, u.Username, u.Email).Scan(&id)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return false, err
@@ -104,9 +109,11 @@ func (uh *userHandler) userExists(u *User) (bool, error) {
 }
 
 // encryptPassword() uses scrypt library to encrypt user's password. Salt is generated from rand.Reader.
-// TODO this is not idempotent so in case it's called multiple times it will encrypt the password multiple times
-// TODO add flag if encryptPassword was already called
+// This is idempotent and in case it's called multiple times it will not encrypt the password multiple times.
 func (u *User) encryptPassword() {
+	if u.passwordEncoded {
+		return
+	}
 	salt := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, salt)
 	if err != nil {
@@ -120,11 +127,12 @@ func (u *User) encryptPassword() {
 
 	u.Password = fmt.Sprintf("%x", dk)
 	u.Salt = fmt.Sprintf("%x", salt)
+	u.passwordEncoded = true
 }
 
 // insert() saves newly created user in database
 func (uh *userHandler) insert(u *User) error {
-	stmt, err := uh.db.Prepare("INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)")
+	stmt, err := uh.db.Prepare(insertUserQuery)
 	if err != nil {
 		return err
 	}

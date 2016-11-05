@@ -48,12 +48,13 @@ type Payload struct {
 
 // User type represents a user (customer) in our system.
 type User struct {
-	ID           int          `json:"id"`
-	Username     string       `json:"username"`
-	Email        string       `json:"email"`
-	Password     string       `json:"password,omitempty"`
-	Salt         string       `json:"-"` // do not show salt in json response at all
-	CreationDate time.Time    `json:"creationDate"`
-	Servers      *[]Server    `json:"servers,omitempty"`
-	MobileApps   *[]MobileApp `json:"mobileApps,omitempty"`
+	ID              int          `json:"id"`
+	Username        string       `json:"username"`
+	Email           string       `json:"email"`
+	Password        string       `json:"password,omitempty"`
+	Salt            string       `json:"-"` // do not show salt in json response at all
+	CreationDate    time.Time    `json:"creationDate"`
+	Servers         *[]Server    `json:"servers,omitempty"`
+	MobileApps      *[]MobileApp `json:"mobileApps,omitempty"`
+	passwordEncoded bool
 }
