@@ -15,6 +15,10 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+// user create request length. This will limit how many data we read from
+// request, to avoid attacks when someone might send large amounts of data.
+const ucrLength = 100000
+
 // User type represents a user (customer) in our system.
 type User struct {
 	ID           int          `json:"id"`
@@ -32,7 +36,7 @@ type User struct {
 func userCreate(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var err error
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 100000))
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, ucrLength))
 	if err != nil {
 		// could not read stream
 		log.Fatalln(err)
