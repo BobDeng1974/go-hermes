@@ -82,12 +82,11 @@ func (u *User) getUser() bool {
 	// Prepare statement for reading data
 	err := db.QueryRow("SELECT id FROM user WHERE username = ? OR email = ?", u.Username, u.Email).Scan(&id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// user doesn't exist
-			return false
-		} else {
+		if err != sql.ErrNoRows {
 			log.Fatalln(err)
 		}
+		// user doesn't exist
+		return false
 	}
 
 	// user already exists
