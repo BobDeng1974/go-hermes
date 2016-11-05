@@ -15,26 +15,18 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+type userHandler struct {
+	db *sql.DB
+}
+
 // user create request length. This will limit how many data we read from
 // request, to avoid attacks when someone might send large amounts of data.
 const ucrLength = 100000
 
-// User type represents a user (customer) in our system.
-type User struct {
-	ID           int          `json:"id"`
-	Username     string       `json:"username"`
-	Email        string       `json:"email"`
-	Password     string       `json:"password,omitempty"`
-	Salt         string       `json:"-"` // do not show salt in json response at all
-	CreationDate time.Time    `json:"creationDate"`
-	Servers      *[]Server    `json:"servers,omitempty"`
-	MobileApps   *[]MobileApp `json:"mobileApps,omitempty"`
-}
-
 // userCreate() reads request, validates email, checks if user exists,
 // saves user to db, and returns a JSON response.
-func userCreate(w http.ResponseWriter, r *http.Request) {
-	var user User
+func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
+	var user *User
 	var err error
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, ucrLength))
 	if err != nil {
@@ -48,7 +40,7 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// could not create user type from provided json
-	if err = json.Unmarshal(body, &user); err != nil {
+	if err = json.Unmarshal(body, user); err != nil {
 		w.WriteHeader(422) // unprocessable entity
 		APIResponse{Error: "Unprocessable entity"}.response(w)
 
@@ -63,7 +55,7 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if there's a user with that username/email already
-	exist, err := user.getUser()
+	exist, err := uh.userExists(user)
 	if err != nil {
 		log.Println(err)
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
@@ -79,7 +71,7 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	user.encryptPassword() // encrypt password
 	// save user to db
 	user.CreationDate = time.Now()
-	err = user.insert()
+	err = uh.insert(user)
 	if err != nil {
 		log.Println(err)
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
@@ -93,12 +85,12 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	APIResponse{Message: "User created successfully!", Metadata: user}.response(w)
 }
 
-// getUser() queries database to find out if user already exists based on username and email.
-func (u *User) getUser() (bool, error) {
+// userExists() queries database to find out if user already exists based on username and email.
+func (uh *userHandler) userExists(u *User) (bool, error) {
 	var id int
 
 	// Prepare statement for reading data
-	err := db.QueryRow("SELECT id FROM user WHERE username = ? OR email = ?", u.Username, u.Email).Scan(&id)
+	err := uh.db.QueryRow("SELECT id FROM user WHERE username = ? OR email = ?", u.Username, u.Email).Scan(&id)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return false, err
@@ -112,6 +104,8 @@ func (u *User) getUser() (bool, error) {
 }
 
 // encryptPassword() uses scrypt library to encrypt user's password. Salt is generated from rand.Reader.
+// TODO this is not idempotent so in case it's called multiple times it will encrypt the password multiple times
+// TODO add flag if encryptPassword was already called
 func (u *User) encryptPassword() {
 	salt := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, salt)
@@ -129,8 +123,8 @@ func (u *User) encryptPassword() {
 }
 
 // insert() saves newly created user in database
-func (u *User) insert() error {
-	stmt, err := db.Prepare("INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)")
+func (uh *userHandler) insert(u *User) error {
+	stmt, err := uh.db.Prepare("INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
