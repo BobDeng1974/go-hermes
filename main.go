@@ -34,14 +34,18 @@ func initDB(username, password, dbName string) (*sql.DB, error) {
 func newRouter(db *sql.DB) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
-	uh := userHandler{
-		db: db,
-	}
+	uh := userHandler{db: db}
+	sh := serverHandler{db: db, uh: &uh}
 
 	router.Methods("POST").
 		Path("/user/create").
 		Name("UserCreate").
 		HandlerFunc(uh.userCreate)
+
+	router.Methods("POST").
+		Path("/server/create").
+		Name("ServerCreate").
+		HandlerFunc(sh.serverCreate)
 
 	return router
 }
