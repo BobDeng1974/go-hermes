@@ -54,6 +54,16 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(user.Email) <= 8 || len(user.Email) > 40 {
+		APIResponse{Error: "Invalid email length"}.response(w)
+		return
+	}
+
+	if len(user.Username) <= 2 || len(user.Username) > 30 {
+		APIResponse{Error: "Invalid username length"}.response(w)
+		return
+	}
+
 	// email validation
 	if _, err = mail.ParseAddress(user.Email); err != nil {
 		APIResponse{Error: "Invalid email address"}.response(w)
