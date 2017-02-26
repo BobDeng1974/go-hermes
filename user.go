@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -97,7 +96,7 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 
 	// user created!
 	w.WriteHeader(http.StatusCreated)
-	user.Password = "" // hide user password from response
+	user.Password = []byte("") // hide user password from response
 	APIResponse{Message: "User created successfully!", Metadata: user}.response(w)
 }
 
@@ -136,8 +135,8 @@ func (u *User) encryptPassword() {
 		log.Fatalln(err)
 	}
 
-	u.Password = fmt.Sprintf("%x", dk)
-	u.Salt = fmt.Sprintf("%x", salt)
+	u.Password = dk
+	u.Salt = salt
 	u.passwordEncoded = true
 }
 

@@ -51,10 +51,16 @@ type User struct {
 	ID              int          `json:"id"`
 	Username        string       `json:"username"`
 	Email           string       `json:"email"`
-	Password        string       `json:"password,omitempty"`
-	Salt            string       `json:"-"` // do not show salt in json response at all
+	Password        []byte       `json:"password,omitempty"`
+	Salt            []byte       `json:"-"` // do not show salt in json response at all
 	CreationDate    time.Time    `json:"creationDate"`
 	Servers         *[]Server    `json:"servers,omitempty"`
 	MobileApps      *[]MobileApp `json:"mobileApps,omitempty"`
 	passwordEncoded bool
+}
+
+// Configuration type holds app configuration
+type Configuration struct {
+	Cert    string `json:"cert"`
+	CertKey string `json:"cert_key"`
 }

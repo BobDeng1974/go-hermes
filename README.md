@@ -37,8 +37,8 @@ USE `gohermes`;
 CREATE TABLE `user` (
   `id` int(11) NOT NULL,
   `username` varchar(30) NOT NULL,
-  `password` varchar(50) NOT NULL,
-  `salt` varchar(20) NOT NULL,
+  `password` BLOB NOT NULL,
+  `salt` BLOB NOT NULL,
   `email` varchar(40) NOT NULL,
   `creationDate` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -75,9 +75,15 @@ rm ./go-hermes
 ```
 * Make file executable: `$ sudo chmod +x ./build.sh`
 * Run `$ ./build.sh`
+
+### Note regarging requests
+Endpoint runs on https and for development self-signed keys are used, and not used
+in production anywhere (therefore `-k` flag in `curl` is used in examples below).
+If you want to make this service publicly accessible, [please generate your own keys](https://github.com/golang/go/blob/master/src/crypto/tls/generate_cert.go).
+
 * Open a new terminal and register a new user:
 ```
-$ curl -H "Content-Type: application/json" -d '{"username":"myUser", "email": "user@example.com"}' http://localhost:8080/user/create
+$ curl -k -H "Content-Type: application/json" -d '{"username":"myUser", "email": "user@example.com"}' https://localhost:8080/user/create
 ```
 
 You should see something like:
@@ -90,7 +96,7 @@ Try sending data with invalid email, passing an id, send request with existing e
 ## /server/create endpoint
 Open another terminal and try creating a new server:
 ```
-$ curl -H "Content-Type: application/json" -d '{"hostname":"usersetup", "user":{"id":1}, "os":{"name":"ubuntu"}}' http://localhost:8080/server/create
+$ curl -k -H "Content-Type: application/json" -d '{"hostname":"usersetup", "user":{"id":1}, "os":{"name":"ubuntu"}}' https://localhost:8080/server/create
 ```
 
 Try sending data with non-existing customer id, or try adding an existing server.
