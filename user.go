@@ -96,7 +96,7 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 
 	// user created!
 	w.WriteHeader(http.StatusCreated)
-	user.Password = []byte("") // hide user password from response
+	user.Password = nil // hide user password from response
 	APIResponse{Message: "User created successfully!", Metadata: user}.response(w)
 }
 
