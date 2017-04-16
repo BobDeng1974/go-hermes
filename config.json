@@ -2,5 +2,6 @@
   "cert": "./certs/cert.pem",
   "cert_key": "./certs/key.pem",
   "port": ":8080",
-  "influxDBHost": "http://localhost:8086"
+  "influxDBHost": "http://localhost:8086",
+  "mongoHost": "localhost"
 }

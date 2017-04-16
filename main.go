@@ -13,7 +13,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	influxDB "github.com/influxdata/influxdb/client/v2"
+	"gopkg.in/mgo.v2"
 )
+
+func initMongo(host, username, password string) (*mgo.Session, error) {
+	info := &mgo.DialInfo{
+		Addrs:    []string{host},
+		Username: username,
+		Password: password,
+	}
+	session, err := mgo.DialWithInfo(info)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
 
 // initMySQL function is responsible for initialising database connection
 // and verifying connection was successful.
@@ -87,31 +102,22 @@ func main() {
 
 	// environment variables needed for database connections
 	const (
-		mysqlUsername  = "MYSQL_USERNAME"
-		mysqlPassword  = "MYSQL_PASSWORD"
-		mysqlDBName    = "MYSQL_NAME"
-		influxUser     = "INFLUX_USER"
-		influxPassword = "INFLUX_PWD"
+		mysqlUsername = "MYSQL_USERNAME"
+		mysqlPassword = "MYSQL_PASSWORD"
+		mysqlDBName   = "MYSQL_NAME"
 	)
-
-	// Show a clear message if an environment variable is not set.
-	// DB connection will fail without this check, but this check will speed up
-	// the debugging process knowing if an environment variable is not set or
-	// if the credentials are just wrong.
-	if os.Getenv(mysqlUsername) == "" || os.Getenv(mysqlPassword) == "" || os.Getenv(mysqlDBName) == "" {
-		log.Fatalln("MySQL database environment variables need to be set")
-	}
 
 	mysqlDB, err := initMySQL(os.Getenv(mysqlUsername), os.Getenv(mysqlPassword), os.Getenv(mysqlDBName))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	if os.Getenv(influxUser) == "" || os.Getenv(influxPassword) == "" {
-		log.Fatalln("InfluxDB credentials need to be set.")
+	influxDBClient, err := initInfluxDB(c.InfluxDBHost, os.Getenv("INFLUX_USER"), os.Getenv("INFLUX_PWD"))
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	influxDBClient, err := initInfluxDB(c.InfluxDBHost, os.Getenv(influxUser), os.Getenv(influxPassword))
+	mongoDB, err := initMongo(c.MongoHost, os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASS"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -120,6 +126,7 @@ func main() {
 	//defer influxDB.Close()
 	defer influxDBClient.Close()
 	defer mysqlDB.Close()
+	defer mongoDB.Close()
 
 	router := newRouter(mysqlDB)
 

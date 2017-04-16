@@ -67,4 +67,13 @@ type Configuration struct {
 
 	// influxDB Settings
 	InfluxDBHost string `json:"influxDBHost"`
+
+	// mongoDB settings
+	MongoHost string `json:"mongoHost"` // mongoDB host
+}
+
+// APIToken represents an API Token
+type APIToken struct {
+	Token string
+	User  *User
 }

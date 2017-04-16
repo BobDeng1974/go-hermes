@@ -4,5 +4,7 @@ export MYSQL_PASSWORD="your password"
 export MYSQL_NAME="gohermes"
 export INFLUX_USER="your username"
 export INFLUX_PWD="your password"
+export MONGO_USER=""
+export MONGO_PASS=""
 ./gohermes
 rm ./gohermes
