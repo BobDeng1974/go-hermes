@@ -31,7 +31,6 @@ const ucrLength = 100000
 // userCreate() reads request, validates email, checks if user exists,
 // saves user to db, and returns a JSON response.
 func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
-	var err error
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, ucrLength))
 	if err != nil {
 		// could not read stream

@@ -23,7 +23,6 @@ const (
 
 // serverCreate() decodes request, checks if server already exists. If not creates the server in database.
 func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
-	var err error
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, scrLength))
 	if err != nil {
 		// could not read stream

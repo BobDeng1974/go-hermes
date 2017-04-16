@@ -61,6 +61,10 @@ type User struct {
 
 // Configuration type holds app configuration
 type Configuration struct {
-	Cert    string `json:"cert"`
-	CertKey string `json:"cert_key"`
+	Cert    string `json:"cert"`     // HTTPS certificate
+	CertKey string `json:"cert_key"` // HTTPS certificate key
+	Port    string `json:"port"`     // port that application runs on
+
+	// influxDB Settings
+	InfluxDBHost string `json:"influxDBHost"`
 }

@@ -1,5 +1,5 @@
 # go-hermes
-Go-hermes is a Golang app that exposes an HTTP API that receives requests with software metrics.
+Go-hermes is a Go app that exposes an HTTP API which receives requests with software metrics.
 
 # About
 This repository is under heavy development. Doesn't work yet. I appreciate you're taking a look, please read my thoughts below.
@@ -64,19 +64,11 @@ ALTER TABLE `server`
 ALTER TABLE `server` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `server` ADD CONSTRAINT `server_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `user` (`id`);
 ```
-* Create a `build.sh` with the following (modify it to match your MySQL setup):
-```
-go get && go build
-export MYSQL_USERNAME="root"
-export MYSQL_PASSWORD="your mysql password"
-export MYSQL_NAME="gohermes"
-./go-hermes
-rm ./go-hermes
-```
-* Make file executable: `$ sudo chmod +x ./build.sh`
+# Build
+* Copy `build.sh.dist` to `build.sh` and modify it to match your credentials.
 * Run `$ ./build.sh`
 
-### Note regarging requests
+### Note regarding requests
 Endpoint runs on https and for development self-signed keys are used, and not used
 in production anywhere (therefore `-k` flag in `curl` is used in examples below).
 If you want to make this service publicly accessible, [please generate your own keys](https://github.com/golang/go/blob/master/src/crypto/tls/generate_cert.go).
