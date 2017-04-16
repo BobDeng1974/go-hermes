@@ -25,30 +25,6 @@ We also need to think about app events such as: deployments, or software updates
 * [Install Go](https://golang.org/dl/).
 * Clone the repo: ```$ git clone git@github.com:go-hermes/go-hermes.git```
 * [Install MongoDB](https://www.mongodb.com/).
-* Create a `gohermes` database in MySQL:
-```sql
-CREATE DATABASE IF NOT EXISTS `gohermes` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `gohermes`;
-```
-* Create `server` table in MySQL:
-```sql
-CREATE TABLE `server` (
-  `id` int(11) NOT NULL,
-  `userId` int(11) NOT NULL,
-  `hostname` varchar(40) NOT NULL,
-  `os` varchar(20) NOT NULL,
-  `lastMetricDate` datetime DEFAULT NULL,
-  `creationDate` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `server`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `userId` (`userId`),
-  ADD KEY `userId_2` (`userId`,`hostname`);
-
-ALTER TABLE `server` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-```
 # Build
 * Copy `build.sh.dist` to `build.sh` and modify it to match your credentials.
 * Run `$ ./build.sh`
@@ -73,7 +49,7 @@ Try sending data with invalid email, passing an id, send request with existing e
 ## /server/create endpoint
 Open another terminal and try creating a new server:
 ```
-$ curl -k -H "Content-Type: application/json" -d '{"hostname":"usersetup", "user":{"id":1}, "os":{"name":"ubuntu"}}' https://localhost:8080/server/create
+$ curl -k -H "Content-Type: application/json" -d '{"hostname":"usersetup", "userId":"58f3cc7ffe558f4cfe2f58ef", "os":{"name":"ubuntu"}}' https://localhost:8080/server/create
 ```
 
 Try sending data with non-existing customer id, or try adding an existing server.

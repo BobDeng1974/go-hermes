@@ -1,7 +1,4 @@
 go get -v && go build -o gohermes
-export MYSQL_USERNAME="your username"
-export MYSQL_PASSWORD="your password"
-export MYSQL_NAME="gohermes"
 export INFLUX_USER="your username"
 export INFLUX_PWD="your password"
 export MONGO_USER=""

@@ -1,9 +1,7 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -30,17 +28,6 @@ func initMongo(host, username, password string) (*mgo.Session, error) {
 	return session, nil
 }
 
-// initMySQL function is responsible for initialising database connection
-// and verifying connection was successful.
-func initMySQL(username, password, dbName string) (*sql.DB, error) {
-	conn, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/%s", username, password, dbName))
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, conn.Ping()
-}
-
 func initInfluxDB(host, username, password string) (influxDB.Client, error) {
 	db, err := influxDB.NewHTTPClient(influxDB.HTTPConfig{
 		Addr:     host,
@@ -61,11 +48,11 @@ func initInfluxDB(host, username, password string) (influxDB.Client, error) {
 }
 
 // newRouter is application router
-func newRouter(db *sql.DB, session *mgo.Session) *mux.Router {
+func newRouter(session *mgo.Session) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
 	uh := userHandler{session: session}
-	sh := serverHandler{db: db, uh: &uh}
+	sh := serverHandler{session: session, uh: uh}
 
 	router.Methods("POST").
 		Path("/user/create").
@@ -100,18 +87,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// environment variables needed for database connections
-	const (
-		mysqlUsername = "MYSQL_USERNAME"
-		mysqlPassword = "MYSQL_PASSWORD"
-		mysqlDBName   = "MYSQL_NAME"
-	)
-
-	mysqlDB, err := initMySQL(os.Getenv(mysqlUsername), os.Getenv(mysqlPassword), os.Getenv(mysqlDBName))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	influxDBClient, err := initInfluxDB(c.InfluxDBHost, os.Getenv("INFLUX_USER"), os.Getenv("INFLUX_PWD"))
 	if err != nil {
 		log.Fatalln(err)
@@ -125,10 +100,9 @@ func main() {
 	// close influxDB & MySQL connection when main() returns
 	//defer influxDB.Close()
 	defer influxDBClient.Close()
-	defer mysqlDB.Close()
 	defer mongoDB.Close()
 
-	router := newRouter(mysqlDB, mongoDB)
+	router := newRouter(mongoDB)
 
 	s := http.Server{
 		Addr:         c.Port,

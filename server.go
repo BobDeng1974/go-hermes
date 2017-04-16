@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -9,19 +8,16 @@ import (
 	"net/http"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type serverHandler struct {
-	db *sql.DB
-	uh *userHandler
+	session *mgo.Session
+	uh      userHandler
 }
 
-const (
-	scrLength       = 100000 // server create request max length
-	findServerSQL   = "SELECT userID FROM server WHERE userID = ? AND hostname = ? LIMIT 1"
-	insertServerSQL = "INSERT INTO server (userId, hostname, os, creationDate) VALUES (?, ?, ?, ?)"
-)
+const scrLength = 100000 // server create request max length
 
 // serverCreate() decodes request, checks if server already exists. If not creates the server in database.
 func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +44,7 @@ func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
 
 	// We want to make sure this request for new server, belongs to an existing user.
 	// Therefore, we need to check if user exists.
-	exist, err := sh.uh.findByID(server.User.ID)
+	exist, err := sh.uh.findByID(server.UserID)
 	if err != nil {
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
 		APIResponse{Message: "Could not check if user exists"}.response(w)
@@ -64,7 +60,7 @@ func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if server already exists based on user ID and hostname
-	exist, err = sh.findServer(server.User.ID, server.HostName)
+	exist, err = sh.findServer(server.UserID, server.HostName)
 	if err != nil {
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
 		APIResponse{Message: "Could not check if server exists"}.response(w)
@@ -95,37 +91,35 @@ func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
 // Returns true if server exists, or false if not.
 // Also, returns an error or nil if no error occurred.
 func (sh *serverHandler) findServer(userID bson.ObjectId, hostname string) (bool, error) {
-	err := sh.db.QueryRow(findServerSQL, userID, hostname).Scan(&userID)
+	var server Server
+	c := sh.session.DB("app").C("server")
+	err := c.Find(bson.M{"userId": userID, "hostName": hostname}).One(&server)
+	if err == mgo.ErrNotFound {
+		return false, nil
+	}
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// server does not exist
-			return false, nil
-		}
-		// something went wrong
 		return false, err
 	}
 
-	// server already exists
 	return true, nil
 }
 
 // Inserts server in database
 func (sh *serverHandler) insert(s *Server) error {
-	stmt, err := sh.db.Prepare(insertServerSQL)
-	if err != nil {
-		return err
-	}
-	s.CreationDate = time.Now()
-	res, err := stmt.Exec(s.User.ID, s.HostName, s.OS.Name, s.CreationDate)
+	c := sh.session.DB("app").C("server")
+	s.ID = bson.NewObjectId()
+	err := c.Insert(bson.M{
+		"_id":          s.ID,
+		"userId":       s.UserID,
+		"hostName":     s.HostName,
+		"osName":       s.OS.Name,
+		"creationDate": time.Now(),
+	})
+
 	if err != nil {
 		return err
 	}
 
-	serverID, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	s.ID = int(serverID)
 	return nil
 }

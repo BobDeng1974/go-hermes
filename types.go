@@ -13,18 +13,18 @@ type OS struct {
 
 // Server represents a remote host
 type Server struct {
-	ID             int       `json:"id"`
-	HostName       string    `json:"hostname"`
-	User           *User     `json:"user"`
-	LastMetricDate time.Time `json:"lastMetricDate,omitempty"`
-	OS             *OS       `json:"os"`
-	Metrics        *[]Metric `json:"-"`
-	CreationDate   time.Time `json:"creationDate,omitempty"`
+	ID             bson.ObjectId `json:"id"`
+	HostName       string        `json:"hostname"`
+	UserID         bson.ObjectId `json:"userId"`
+	LastMetricDate time.Time     `json:"lastMetricDate,omitempty"`
+	OS             *OS           `json:"os"`
+	Metrics        *[]Metric     `json:"-"`
+	CreationDate   time.Time     `json:"creationDate,omitempty"`
 }
 
 // A Metric is a measurement that makes sense to User when viewed in dashboard.
 type Metric struct {
-	ID           int
+	ID           bson.ObjectId
 	Name         string
 	Value        string    // metric value
 	CreationDate time.Time // when this metric was created on 3rd party host
@@ -34,7 +34,7 @@ type Metric struct {
 
 // App represents an (IoT/mobile/web) application made by a User.
 type App struct {
-	ID           int
+	ID           bson.ObjectId
 	Name         string
 	CreationDate time.Time // when this app was added to our system
 	Metrics      *[]Metric
@@ -43,11 +43,11 @@ type App struct {
 
 // Payload holds the metrics we receive in a request.
 type Payload struct {
-	User        int    `json:"user_id"`
-	Server      int    `json:"server_id"`
-	App         int    `json:"app_id"`
-	MetricID    int    `json:"metric_id"`
-	MetricValue string `json:"value"`
+	User        bson.ObjectId `json:"user_id"`
+	Server      bson.ObjectId `json:"server_id"`
+	App         bson.ObjectId `json:"app_id"`
+	MetricID    bson.ObjectId `json:"metric_id"`
+	MetricValue string        `json:"value"`
 }
 
 // User type represents a user (customer) in our system.
