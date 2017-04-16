@@ -1,6 +1,10 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"gopkg.in/mgo.v2/bson"
+)
 
 // OS represents an Operating System
 type OS struct {
@@ -48,14 +52,14 @@ type Payload struct {
 
 // User type represents a user (customer) in our system.
 type User struct {
-	ID              int       `json:"id"`
-	Username        string    `json:"username"`
-	Email           string    `json:"email"`
-	Password        []byte    `json:"password,omitempty"`
-	Salt            []byte    `json:"-"` // do not show salt in json response at all
-	CreationDate    time.Time `json:"creationDate"`
-	Servers         *[]Server `json:"servers,omitempty"`
-	Apps            *[]App    `json:"apps,omitempty"`
+	ID              bson.ObjectId `json:"id"`
+	Username        string        `json:"username"`
+	Email           string        `json:"email"`
+	Password        []byte        `json:"password,omitempty"`
+	Salt            []byte        `json:"-"` // do not show salt in json response at all
+	CreationDate    time.Time     `json:"creationDate"`
+	Servers         *[]Server     `json:"servers,omitempty"`
+	Apps            *[]App        `json:"apps,omitempty"`
 	passwordEncoded bool
 }
 

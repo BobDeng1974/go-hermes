@@ -61,10 +61,10 @@ func initInfluxDB(host, username, password string) (influxDB.Client, error) {
 }
 
 // newRouter is application router
-func newRouter(db *sql.DB) *mux.Router {
+func newRouter(db *sql.DB, session *mgo.Session) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
-	uh := userHandler{db: db}
+	uh := userHandler{session: session}
 	sh := serverHandler{db: db, uh: &uh}
 
 	router.Methods("POST").
@@ -128,7 +128,7 @@ func main() {
 	defer mysqlDB.Close()
 	defer mongoDB.Close()
 
-	router := newRouter(mysqlDB)
+	router := newRouter(mysqlDB, mongoDB)
 
 	s := http.Server{
 		Addr:         c.Port,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -11,17 +10,14 @@ import (
 	"net/mail"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+
 	"golang.org/x/crypto/scrypt"
 )
 
-const (
-	insertUserQuery       = "INSERT INTO user (username, password, salt, email, creationDate) VALUES(?, ?, ?, ?, ?)"
-	findUserByNameOrEmail = "SELECT id FROM user WHERE username = ? OR email = ?"
-	findUserByID          = "SELECT id FROM user WHERE id = ? LIMIT 1"
-)
-
 type userHandler struct {
-	db *sql.DB
+	session *mgo.Session
 }
 
 // user create request length. This will limit how many data we read from
@@ -101,16 +97,17 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 
 // userExists() queries database to find out if user already exists based on username and email.
 func (uh *userHandler) userExists(u *User) (bool, error) {
-	var id int
+	result := User{}
 
-	// Prepare statement for reading data
-	err := uh.db.QueryRow(findUserByNameOrEmail, u.Username, u.Email).Scan(&id)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			return false, err
-		}
+	c := uh.session.DB("app").C("user")
+	err := c.Find(bson.M{"$or": []bson.M{bson.M{"username": u.Username}, bson.M{"email": u.Email}}}).One(&result)
+	if err == mgo.ErrNotFound {
 		// user doesn't exist
 		return false, nil
+	}
+
+	if err != nil {
+		return false, err
 	}
 
 	// user already exists
@@ -141,36 +138,39 @@ func (u *User) encryptPassword() {
 
 // insert() saves newly created user in database
 func (uh *userHandler) insert(u *User) error {
-	stmt, err := uh.db.Prepare(insertUserQuery)
-	if err != nil {
-		return err
-	}
-	res, err := stmt.Exec(u.Username, u.Password, u.Salt, u.Email, u.CreationDate)
-	if err != nil {
-		return err
-	}
+	c := uh.session.DB("app").C("user")
+	u.ID = bson.NewObjectId()
 
-	userID, err := res.LastInsertId()
+	err := c.Insert(bson.M{
+		"_id":          u.ID,
+		"username":     u.Username,
+		"password":     u.Password,
+		"salt":         u.Salt,
+		"email":        u.Email,
+		"creationDate": u.CreationDate,
+	})
+
 	if err != nil {
 		return err
 	}
-
-	u.ID = int(userID)
 
 	return nil
 }
 
 // Checks if user exists by given id. Returns true if user exists, or false if not.
 // Also returns error or nil if no error occurred.
-func (uh *userHandler) findByID(id int) (bool, error) {
-	err := uh.db.QueryRow(findUserByID, id).Scan(&id)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			// something went wrong with this query
-			return false, err
-		}
-		// user doesn't exist
+func (uh *userHandler) findByID(id bson.ObjectId) (bool, error) {
+	var u User
+	c := uh.session.DB("app").C("user")
+	err := c.FindId(id).One(&u)
+	// user not found
+	if err == mgo.ErrNotFound {
 		return false, nil
+	}
+
+	// something went wrong
+	if err != nil {
+		return false, err
 	}
 
 	// user already exists

@@ -24,25 +24,14 @@ We also need to think about app events such as: deployments, or software updates
 # Try it out
 * [Install Go](https://golang.org/dl/).
 * Clone the repo: ```$ git clone git@github.com:go-hermes/go-hermes.git```
+* [Install MongoDB](https://www.mongodb.com/).
 * Create a `gohermes` database in MySQL:
 ```sql
 CREATE DATABASE IF NOT EXISTS `gohermes` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `gohermes`;
 ```
-* Create `user` and `server` tables in MySQL:
+* Create `server` table in MySQL:
 ```sql
-CREATE TABLE `user` (
-  `id` int(11) NOT NULL,
-  `username` varchar(30) NOT NULL,
-  `password` BLOB NOT NULL,
-  `salt` BLOB NOT NULL,
-  `email` varchar(40) NOT NULL,
-  `creationDate` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-ALTER TABLE `user` ADD PRIMARY KEY (`id`);
-ALTER TABLE `user` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 CREATE TABLE `server` (
   `id` int(11) NOT NULL,
   `userId` int(11) NOT NULL,
@@ -59,7 +48,6 @@ ALTER TABLE `server`
   ADD KEY `userId_2` (`userId`,`hostname`);
 
 ALTER TABLE `server` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `server` ADD CONSTRAINT `server_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `user` (`id`);
 ```
 # Build
 * Copy `build.sh.dist` to `build.sh` and modify it to match your credentials.

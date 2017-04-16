@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type serverHandler struct {
@@ -92,7 +94,7 @@ func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
 // Checks if server exists in database based on userID and hostname.
 // Returns true if server exists, or false if not.
 // Also, returns an error or nil if no error occurred.
-func (sh *serverHandler) findServer(userID int, hostname string) (bool, error) {
+func (sh *serverHandler) findServer(userID bson.ObjectId, hostname string) (bool, error) {
 	err := sh.db.QueryRow(findServerSQL, userID, hostname).Scan(&userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
