@@ -28,34 +28,34 @@ type Metric struct {
 	Server       *Server
 }
 
-// MobileApp represents a mobile app made by a User.
-type MobileApp struct {
+// App represents an (IoT/mobile/web) application made by a User.
+type App struct {
 	ID           int
 	Name         string
-	CreationDate time.Time // when this mobile app was added to our system
+	CreationDate time.Time // when this app was added to our system
 	Metrics      *[]Metric
 	User         *User
 }
 
 // Payload holds the metrics we receive in a request.
 type Payload struct {
-	User        int    `json:"user_id"`       // payload is specific to a user
-	Server      int    `json:"server_id"`     // payload is specific to a server or mobile app
-	MobileApp   int    `json:"mobile_app_id"` // payload is specific to a server or mobile app
-	MetricID    int    `json:"metric_id"`     // the collected metric from server or mobile app
+	User        int    `json:"user_id"`
+	Server      int    `json:"server_id"`
+	App         int    `json:"app_id"`
+	MetricID    int    `json:"metric_id"`
 	MetricValue string `json:"value"`
 }
 
 // User type represents a user (customer) in our system.
 type User struct {
-	ID              int          `json:"id"`
-	Username        string       `json:"username"`
-	Email           string       `json:"email"`
-	Password        []byte       `json:"password,omitempty"`
-	Salt            []byte       `json:"-"` // do not show salt in json response at all
-	CreationDate    time.Time    `json:"creationDate"`
-	Servers         *[]Server    `json:"servers,omitempty"`
-	MobileApps      *[]MobileApp `json:"mobileApps,omitempty"`
+	ID              int       `json:"id"`
+	Username        string    `json:"username"`
+	Email           string    `json:"email"`
+	Password        []byte    `json:"password,omitempty"`
+	Salt            []byte    `json:"-"` // do not show salt in json response at all
+	CreationDate    time.Time `json:"creationDate"`
+	Servers         *[]Server `json:"servers,omitempty"`
+	Apps            *[]App    `json:"apps,omitempty"`
 	passwordEncoded bool
 }
 
