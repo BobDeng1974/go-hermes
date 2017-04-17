@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	influxDB "github.com/influxdata/influxdb/client/v2"
 	"gopkg.in/mgo.v2"
@@ -98,8 +97,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// close influxDB & MySQL connection when main() returns
-	//defer influxDB.Close()
+	// close influxDB connection when main() returns
 	defer influxDBClient.Close()
 	defer mongoDB.Close()
 
