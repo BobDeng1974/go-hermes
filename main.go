@@ -52,7 +52,8 @@ func newRouter(session *mgo.Session) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
 	uh := userHandler{session: session}
-	sh := serverHandler{session: session, uh: uh}
+	th := tokenHandler{session: session}
+	sh := serverHandler{session: session, th: th}
 
 	router.Methods("POST").
 		Path("/user/create").

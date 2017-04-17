@@ -14,13 +14,19 @@ import (
 
 type serverHandler struct {
 	session *mgo.Session
-	uh      userHandler
+	th      tokenHandler
 }
 
 const scrLength = 100000 // server create request max length
 
 // serverCreate() decodes request, checks if server already exists. If not creates the server in database.
 func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
+	user, err := sh.th.getUserByToken(r.URL.Query().Get("token"))
+	if err != nil {
+		w.WriteHeader(400) // bad request
+		APIResponse{Message: "Invalid token"}.response(w)
+		return
+	}
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, scrLength))
 	if err != nil {
 		// could not read stream
@@ -33,34 +39,18 @@ func (sh *serverHandler) serverCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	server := &Server{}
+	server.UserID = user.ID
 	// FIXME fails when request has userId value in quotes with error "cannot unmarshal string into Go value of type int".
 	if err = json.Unmarshal(body, server); err != nil {
 		w.WriteHeader(422) // unprocessable entity
 		APIResponse{Message: "Unprocessable entity"}.response(w)
 
-		log.Fatalln(err)
-		return
-	}
-
-	// We want to make sure this request for new server, belongs to an existing user.
-	// Therefore, we need to check if user exists.
-	exist, err := sh.uh.findByID(server.UserID)
-	if err != nil {
-		w.Header().Set(`Status`, string(http.StatusInternalServerError))
-		APIResponse{Message: "Could not check if user exists"}.response(w)
 		log.Println(err)
 		return
 	}
 
-	if !exist {
-		// user does not exist
-		w.Header().Set(`Status`, string(http.StatusNotFound))
-		APIResponse{Message: "User not found"}.response(w)
-		return
-	}
-
 	// check if server already exists based on user ID and hostname
-	exist, err = sh.findServer(server.UserID, server.HostName)
+	exist, err := sh.findServer(server.UserID, server.HostName)
 	if err != nil {
 		w.Header().Set(`Status`, string(http.StatusInternalServerError))
 		APIResponse{Message: "Could not check if server exists"}.response(w)

@@ -41,15 +41,17 @@ $ curl -k -H "Content-Type: application/json" -d '{"username":"myUser", "email":
 
 You should see something like:
 ```
-{"message":"User created successfully!","Metadata":{"id":1,"username":"myUser","email":"user@example.com","creationDate":"2016-11-05T16:09:33.340621976Z"}}
+{"message":"User created successfully!","Metadata":{"id":1,"username":"myUser","email":"user@example.com","creationDate":"2016-11-05T16:09:33.340621976Z","apiToken":"<random token>"}}
 ```
+
+Write down that key as you will need it in order to make further API requests.
 
 Try sending data with invalid email, passing an id, send request with existing email/username.
 
 ## /server/create endpoint
 Open another terminal and try creating a new server:
 ```
-$ curl -k -H "Content-Type: application/json" -d '{"hostname":"usersetup", "userId":"58f3cc7ffe558f4cfe2f58ef", "os":{"name":"ubuntu"}}' https://localhost:8080/server/create
+$ curl -k -H "Content-Type: application/json" -d '{"hostname":"usersetup", "os":{"name":"ubuntu"}}' https://localhost:8080/server/create?token=<yourAPIToken>
 ```
 
 Try sending data with non-existing customer id, or try adding an existing server.

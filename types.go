@@ -15,11 +15,11 @@ type OS struct {
 type Server struct {
 	ID             bson.ObjectId `json:"id"`
 	HostName       string        `json:"hostname"`
-	UserID         bson.ObjectId `json:"userId"`
 	LastMetricDate time.Time     `json:"lastMetricDate,omitempty"`
 	OS             *OS           `json:"os"`
 	Metrics        *[]Metric     `json:"-"`
 	CreationDate   time.Time     `json:"creationDate,omitempty"`
+	UserID         bson.ObjectId
 }
 
 // A Metric is a measurement that makes sense to User when viewed in dashboard.
