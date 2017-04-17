@@ -10,6 +10,8 @@ import (
 	"net/mail"
 	"time"
 
+	mathRand "math/rand"
+
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
@@ -79,8 +81,11 @@ func (uh *userHandler) userCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.encryptPassword() // encrypt password
+	user.generateRandomToken()
+
 	// save user to db
 	user.CreationDate = time.Now()
+	user.Roles = []ACLRole{RoleUser}
 	err = uh.insert(user)
 	if err != nil {
 		log.Println(err)
@@ -112,6 +117,24 @@ func (uh *userHandler) userExists(u *User) (bool, error) {
 
 	// user already exists
 	return true, nil
+}
+
+// random generator found on http://stackoverflow.com/a/22892986/1294631
+func (u *User) generateRandomToken() {
+	if u.tokenGenerated {
+		return
+	}
+
+	n := 64
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[mathRand.Intn(len(letters))]
+	}
+
+	u.Token = string(b)
+	u.tokenGenerated = true
 }
 
 // encryptPassword() uses scrypt library to encrypt user's password. Salt is generated from rand.Reader.
@@ -147,6 +170,8 @@ func (uh *userHandler) insert(u *User) error {
 		"password":     u.Password,
 		"salt":         u.Salt,
 		"email":        u.Email,
+		"roles":        u.Roles,
+		"token":        u.Token,
 		"creationDate": u.CreationDate,
 	})
 

@@ -50,6 +50,16 @@ type Payload struct {
 	MetricValue string        `json:"value"`
 }
 
+// ACLRole refers to a user role.
+type ACLRole string
+
+const (
+	// RoleUser is for standard level users.
+	RoleUser ACLRole = "ROLE_USER"
+	// RoleSuperAdmin is for administrators.
+	RoleSuperAdmin ACLRole = "ROLE_SUPER_ADMIN"
+)
+
 // User type represents a user (customer) in our system.
 type User struct {
 	ID              bson.ObjectId `json:"id"`
@@ -60,7 +70,10 @@ type User struct {
 	CreationDate    time.Time     `json:"creationDate"`
 	Servers         *[]Server     `json:"servers,omitempty"`
 	Apps            *[]App        `json:"apps,omitempty"`
+	Roles           []ACLRole     `json:"-"`
+	Token           string        `json:"apiToken,omitempty"`
 	passwordEncoded bool
+	tokenGenerated  bool
 }
 
 // Configuration type holds app configuration
@@ -74,10 +87,4 @@ type Configuration struct {
 
 	// mongoDB settings
 	MongoHost string `json:"mongoHost"` // mongoDB host
-}
-
-// APIToken represents an API Token
-type APIToken struct {
-	Token string
-	User  *User
 }
