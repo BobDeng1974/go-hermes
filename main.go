@@ -69,9 +69,9 @@ func newRouter(session *mgo.Session) *mux.Router {
 }
 
 // Reads config.json file, and unmarshals to Configuration struct.
-func loadConfig() (Configuration, error) {
+func loadConfig(file string) (Configuration, error) {
 	var c Configuration
-	f, err := ioutil.ReadFile("./config.json")
+	f, err := ioutil.ReadFile(file)
 	if err != nil {
 		return c, err
 	}
@@ -83,7 +83,7 @@ func loadConfig() (Configuration, error) {
 }
 
 func main() {
-	c, err := loadConfig()
+	c, err := loadConfig("./config.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
